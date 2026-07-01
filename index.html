@@ -83,6 +83,36 @@
   .authbox p{color:var(--muted);font-size:13px;margin:0 0 22px}
   .authbox button{background:var(--accent);color:#1a1206;border:none;border-radius:9px;padding:11px 20px;font-weight:bold;cursor:pointer;width:100%}
   #app{display:none}
+  .pvcard{background:var(--panel);border:1px solid var(--line);border-radius:16px;width:min(560px,96vw);height:min(80vh,720px);display:flex;flex-direction:column;overflow:hidden}
+  .pvhead{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .pvhead .tt{min-width:0}
+  .pvhead .tt .t1{font-family:Georgia,serif;font-size:15px}
+  .pvhead .tt .t2{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pvbtns{display:flex;gap:6px;flex-shrink:0}
+  .pvbtns button{border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:7px;padding:7px 9px;cursor:pointer}
+  .pvbtns button:hover{border-color:var(--accent)}
+  .pvbtns button svg{width:16px;height:16px;display:block}
+  .pvbody{flex:1;background:#0b0f14;overflow:auto;display:flex;align-items:center;justify-content:center}
+  .pvbody iframe{width:100%;height:100%;border:0;background:#fff}
+  .pvbody img{max-width:100%;max-height:100%;display:block}
+  .pvmsg{color:var(--muted);font-size:13px;text-align:center;padding:40px 24px;font-family:Arial,sans-serif}
+  .delcard{background:var(--panel);border:1px solid var(--line);border-radius:16px;width:min(400px,96vw);overflow:hidden}
+  .delcard h3{margin:0;padding:18px 22px;border-bottom:1px solid var(--line);font-family:Georgia,serif;font-size:17px;display:flex;align-items:center;justify-content:space-between}
+  .delbody{padding:22px;font-family:Arial,sans-serif}
+  .delicon{width:46px;height:46px;border-radius:50%;background:#3a1c1c;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;color:#e06464}
+  .delicon svg{width:22px;height:22px}
+  .delq{text-align:center;color:var(--ink);font-size:14px;margin:0 0 6px}
+  .delinfo{background:var(--panel2);border-radius:9px;padding:12px 14px;margin:14px 0 4px;text-align:center}
+  .delinfo .nm{font-family:Georgia,serif;color:var(--ink);font-size:15px}
+  .delinfo .vl{color:var(--accent);font-family:Georgia,serif;font-weight:bold;font-size:17px;margin-top:2px}
+  .delwarn{text-align:center;color:var(--muted);font-size:12px;margin:10px 0 20px}
+  .delbtns{display:flex;gap:10px}
+  .delbtns button{flex:1;border-radius:9px;padding:12px;font-size:14px;font-family:Arial,sans-serif;cursor:pointer}
+  .delbtns .cancel{background:var(--panel2);color:var(--ink);border:1px solid var(--line)}
+  .delbtns .cancel:hover{border-color:var(--accent)}
+  .delbtns .confirm{background:#b33a3a;color:#fff;border:none;font-weight:bold}
+  .delbtns .confirm:hover{background:#c94545}
+  .delbtns .confirm:disabled{opacity:.6;cursor:default}
   @media(max-width:640px){.cards{grid-template-columns:1fr}}
 </style>
 </head>
@@ -159,6 +189,41 @@
         </div>
       </div>
       <button class="btnsave" id="btnSave" onclick="salvar()">Salvar pagamento</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PREVIEW COMPROVANTE -->
+<div class="modal" id="pvModal">
+  <div class="pvcard">
+    <div class="pvhead">
+      <div class="tt">
+        <div class="t1">Comprovante</div>
+        <div class="t2" id="pvNome">—</div>
+      </div>
+      <div class="pvbtns">
+        <button onclick="pvNovaAba()" title="Abrir em nova aba" aria-label="Abrir em nova aba"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg></button>
+        <button onclick="pvBaixar()" title="Baixar" aria-label="Baixar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg></button>
+        <button onclick="fecharPreview()" title="Fechar" aria-label="Fechar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      </div>
+    </div>
+    <div class="pvbody" id="pvBody"></div>
+  </div>
+</div>
+
+<!-- MODAL CONFIRMAR EXCLUSÃO -->
+<div class="modal" id="delModal">
+  <div class="delcard">
+    <h3>Excluir pagamento<button class="close" onclick="fecharExcluir()">×</button></h3>
+    <div class="delbody">
+      <div class="delicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></div>
+      <p class="delq">Tem certeza que deseja excluir este pagamento?</p>
+      <div class="delinfo"><div class="nm" id="delNome">—</div><div class="vl" id="delValor">—</div></div>
+      <p class="delwarn">Esta ação não pode ser desfeita.</p>
+      <div class="delbtns">
+        <button class="cancel" onclick="fecharExcluir()">Cancelar</button>
+        <button class="confirm" id="delBtn" onclick="confirmarExcluir()">Excluir</button>
+      </div>
     </div>
   </div>
 </div>
@@ -274,6 +339,7 @@ function render(){
         <div class="pval">${fmtBR(p.valor)}</div>
         <div class="pbtns">
           ${podeEditar?`<button onclick="abrirEdit('${p.id}')" title="Editar" aria-label="Editar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4z"/></svg></button>`:""}
+          ${p.file_path?`<button onclick="verComprovante('${p.id}')" title="Visualizar" aria-label="Visualizar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button>`:""}
           ${p.file_path?`<button onclick="baixar('${p.id}')" title="Baixar" aria-label="Baixar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg></button>`:""}
           ${podeEditar?`<button class="del" onclick="excluir('${p.id}')" title="Excluir" aria-label="Excluir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>`:""}
         </div>
@@ -351,15 +417,58 @@ async function baixar(id){
   }catch(e){toast("Erro ao baixar.");console.error(e);}
 }
 
-async function excluir(id){
+let pvUrl=null, pvFilename=null, pvId=null;
+async function verComprovante(id){
+  const p=pagamentos.find(x=>x.id===id);
+  if(!p||!p.file_path)return;
+  pvId=id; pvFilename=p.filename||"comprovante";
+  document.getElementById("pvNome").textContent=pvFilename;
+  const body=document.getElementById("pvBody");
+  body.innerHTML=`<div class="pvmsg">Carregando…</div>`;
+  pvModal.classList.add("on");
+  try{
+    const {data,error}=await sb.storage.from("pagamentos").createSignedUrl(p.file_path,3600);
+    if(error)throw error;
+    pvUrl=data.signedUrl;
+    const ext=(pvFilename.split(".").pop()||"").toLowerCase();
+    if(ext==="pdf"){
+      body.innerHTML=`<iframe src="${pvUrl}#toolbar=1&navpanes=0" title="Comprovante"></iframe>`;
+    }else if(["jpg","jpeg","png","gif","webp","bmp"].includes(ext)){
+      body.innerHTML=`<img src="${pvUrl}" alt="Comprovante">`;
+    }else{
+      body.innerHTML=`<div class="pvmsg">Este tipo de arquivo (.${esc(ext)}) não pode ser exibido aqui.<br>Use o botão de baixar ou abrir em nova aba.</div>`;
+    }
+  }catch(e){
+    body.innerHTML=`<div class="pvmsg">Não foi possível carregar o comprovante.</div>`;
+    console.error(e);
+  }
+}
+function fecharPreview(){pvModal.classList.remove("on");document.getElementById("pvBody").innerHTML="";pvUrl=null;}
+function pvNovaAba(){if(pvUrl)window.open(pvUrl,"_blank");}
+function pvBaixar(){if(pvId)baixar(pvId);}
+
+let delId=null;
+function excluir(id){
   if(!podeEditar){toast("Sem permissão.");return;}
   const p=pagamentos.find(x=>x.id===id);if(!p)return;
-  if(!confirm(`Excluir o pagamento de "${p.beneficiario||""}" (${fmtBR(p.valor)})? Não pode ser desfeito.`))return;
+  delId=id;
+  document.getElementById("delNome").textContent=p.beneficiario||"(sem beneficiário)";
+  document.getElementById("delValor").textContent=fmtBR(p.valor);
+  delModal.classList.add("on");
+}
+function fecharExcluir(){delModal.classList.remove("on");delId=null;}
+async function confirmarExcluir(){
+  if(!delId)return;
+  const p=pagamentos.find(x=>x.id===delId);if(!p){fecharExcluir();return;}
+  const btn=document.getElementById("delBtn");
+  btn.disabled=true;btn.textContent="Excluindo...";
   try{
     if(p.file_path)await sb.storage.from("pagamentos").remove([p.file_path]).catch(()=>{});
-    const {error}=await sb.from("pagamentos").delete().eq("id",id);if(error)throw error;
+    const {error}=await sb.from("pagamentos").delete().eq("id",delId);if(error)throw error;
+    fecharExcluir();
     toast("Pagamento excluído.");await carregar();
   }catch(e){toast("Erro ao excluir: "+e.message);console.error(e);}
+  btn.disabled=false;btn.textContent="Excluir";
 }
 
 function exportarExcel(){
@@ -419,6 +528,9 @@ async function salvarCat(id){
 
 let toastT;
 function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.style.display="block";clearTimeout(toastT);toastT=setTimeout(()=>t.style.display="none",4000);}
+
+document.getElementById("pvModal").addEventListener("click",e=>{if(e.target.id==="pvModal")fecharPreview();});
+document.getElementById("delModal").addEventListener("click",e=>{if(e.target.id==="delModal")fecharExcluir();});
 
 checkSession();
 </script>
