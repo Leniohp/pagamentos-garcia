@@ -42,6 +42,7 @@
   .pben{font-size:15px;font-weight:bold;font-family:Georgia,serif;margin:0}
   .ptags{margin-top:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
   .cat{font-size:11px;padding:2px 9px;border-radius:7px;background:#243; color:#9fd9a5;white-space:nowrap}
+  .meio{font-size:11px;padding:2px 9px;border-radius:7px;background:#2a2440;color:#c3b2ea;white-space:nowrap}
   .pfile{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--accent);text-decoration:none;cursor:pointer}
   .pfile svg{width:13px;height:13px}
   .pobs{font-size:12px;color:var(--muted);margin:4px 0 0;white-space:pre-wrap}
@@ -139,6 +140,13 @@
     <div class="body">
       <div><label>Data</label><input type="date" id="f_data"></div>
       <div><label>Beneficiário (quem recebeu)</label><input type="text" id="f_ben" placeholder="Ex: Banco Sicredi"></div>
+      <div><label>Meio de pagamento</label><select id="f_meio">
+        <option value="">Selecione…</option>
+        <option value="SICREDI">SICREDI</option>
+        <option value="Banco do Brasil">Banco do Brasil</option>
+        <option value="Itaú">Itaú</option>
+        <option value="Nubank">Nubank</option>
+      </select></div>
       <div><label>Valor (R$)</label><input type="text" id="f_valor" inputmode="decimal" placeholder="Ex: 42000,00"></div>
       <div><label>Categoria</label><select id="f_cat"></select></div>
       <div><label>Observação</label><textarea id="f_obs" rows="2" placeholder="Opcional…"></textarea></div>
@@ -254,11 +262,12 @@ function render(){
     let dia="--",mes="";
     if(p.data){const x=p.data.split("-");dia=x[2];mes=MES_NOME[+x[1]-1]+" "+x[0].slice(2);}
     const fileHtml=p.file_path?`<span class="pfile" onclick="baixar('${p.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/></svg>${esc(p.filename||"comprovante")}</span>`:`<span style="font-size:12px;color:var(--muted);font-style:italic">sem comprovante</span>`;
+    const meioHtml=p.meio_pagamento?`<span class="meio">${esc(p.meio_pagamento)}</span>`:"";
     return `<div class="pitem">
       <div class="pdate"><div class="d">${dia}</div><div class="m">${mes}</div></div>
       <div class="pmain">
         <p class="pben">${esc(p.beneficiario||"(sem beneficiário)")}</p>
-        <div class="ptags"><span class="cat">${esc(p.categoria||"—")}</span>${fileHtml}</div>
+        <div class="ptags"><span class="cat">${esc(p.categoria||"—")}</span>${meioHtml}${fileHtml}</div>
         ${p.observacao?`<p class="pobs">${esc(p.observacao)}</p>`:""}
       </div>
       <div class="pright">
@@ -278,7 +287,7 @@ function abrirNovo(){
   editId=null;novoArquivo=null;
   formTitle.textContent="Novo pagamento";
   f_data.value=new Date().toISOString().slice(0,10);
-  f_ben.value="";f_valor.value="";f_obs.value="";
+  f_ben.value="";f_valor.value="";f_obs.value="";f_meio.value="";
   if(categorias.length)f_cat.value=categorias[0].nome;
   dropTxt.textContent="Arraste o comprovante ou clique para selecionar";
   formModal.classList.add("on");
@@ -289,6 +298,7 @@ function abrirEdit(id){
   editId=id;novoArquivo=null;
   formTitle.textContent="Editar pagamento";
   f_data.value=p.data||"";f_ben.value=p.beneficiario||"";
+  f_meio.value=p.meio_pagamento||"";
   f_valor.value=p.valor!=null?String(p.valor).replace(".",","):"";
   f_cat.value=p.categoria||(categorias[0]&&categorias[0].nome)||"";
   f_obs.value=p.observacao||"";
@@ -307,6 +317,7 @@ drop.ondrop=e=>{e.preventDefault();drop.classList.remove("drag");const f=e.dataT
 async function salvar(){
   if(!podeEditar){toast("Sem permissão.");return;}
   const data=f_data.value, beneficiario=f_ben.value.trim(), categoria=f_cat.value, observacao=f_obs.value.trim();
+  const meio_pagamento=f_meio.value;
   const valor=parseValor(f_valor.value);
   if(!beneficiario){toast("Informe o beneficiário.");return;}
   if(!data){toast("Informe a data.");return;}
@@ -324,7 +335,7 @@ async function salvar(){
       if(ex&&ex.file_path)await sb.storage.from("pagamentos").remove([ex.file_path]).catch(()=>{});
       filename=novoArquivo.name;file_path=safe;
     }
-    const payload={data,beneficiario,categoria,valor,observacao,filename,file_path,enviado_por:sessionUser.email};
+    const payload={data,beneficiario,categoria,meio_pagamento,valor,observacao,filename,file_path,enviado_por:sessionUser.email};
     if(editId){const {error}=await sb.from("pagamentos").update(payload).eq("id",editId);if(error)throw error;toast("Pagamento atualizado ✓");}
     else{const {error}=await sb.from("pagamentos").insert(payload);if(error)throw error;toast("Pagamento cadastrado ✓");}
     fecharForm();await carregar();
@@ -357,6 +368,7 @@ function exportarExcel(){
   const linhas=lst.map(p=>({
     "Data":p.data?p.data.split("-").reverse().join("/"):"",
     "Beneficiário":p.beneficiario||"",
+    "Meio de pagamento":p.meio_pagamento||"",
     "Categoria":p.categoria||"",
     "Valor":Number(p.valor)||0,
     "Observação":p.observacao||"",
@@ -364,7 +376,7 @@ function exportarExcel(){
     "Lançado por":p.enviado_por||""
   }));
   const ws=XLSX.utils.json_to_sheet(linhas);
-  ws["!cols"]=[{wch:12},{wch:32},{wch:30},{wch:14},{wch:30},{wch:24},{wch:24}];
+  ws["!cols"]=[{wch:12},{wch:32},{wch:18},{wch:30},{wch:14},{wch:30},{wch:24},{wch:24}];
   const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,ws,"Pagamentos");
   const fm=document.getElementById("fMes").value;
